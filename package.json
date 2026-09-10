@@ -36,5 +36,14 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "8.59.2",
     "vitest": "^4.0.8"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.html": [
+      "prettier --write"
+    ]
   }
 }
