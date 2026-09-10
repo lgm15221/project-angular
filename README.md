@@ -38,6 +38,7 @@ src/app/
 ```
 
 Comando usado:
+
 ```bash
 mkdir -p src/app/pages src/app/components src/app/models src/app/services
 mkdir -p src/app/core/guards src/app/core/interceptors
@@ -51,17 +52,19 @@ mkdir -p src/app/directives src/app/pipes
 El CLI ya los genera correctamente en esta versión de Angular, pero es importante entender qué hace cada uno:
 
 **`app.config.ts`** — configuración global de la app. Aquí se registran todos los "providers" (router, HttpClient, interceptores, etc.):
+
 ```ts
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(routes)]
+  providers: [provideRouter(routes)],
 };
 ```
 
 **`main.ts`** — el punto de arranque de la app. Solo importa `appConfig` y arranca:
+
 ```ts
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app/app.component';
@@ -77,18 +80,18 @@ ng g c pages/home
 ```
 
 `app.component.html` (punto donde Angular inserta la página activa):
+
 ```html
 <router-outlet />
 ```
 
 `app.routes.ts` (mapea la URL con el componente):
+
 ```ts
 import { Routes } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 
-export const routes: Routes = [
-  { path: '', component: HomeComponent }
-];
+export const routes: Routes = [{ path: '', component: HomeComponent }];
 ```
 
 **Comprobación:** `ng serve` → abrir `http://localhost:4200` → debe mostrarse el contenido de `HomeComponent`.
@@ -102,6 +105,7 @@ npm install --save-dev prettier
 ```
 
 `.prettierrc` (reglas de formato):
+
 ```json
 {
   "singleQuote": true,
@@ -113,6 +117,7 @@ npm install --save-dev prettier
 ```
 
 `.prettierignore` (carpetas que Prettier no debe tocar):
+
 ```
 dist
 node_modules
@@ -121,7 +126,7 @@ coverage
 
 ## 6. ESLint — detección de errores y malas prácticas
 
-**¿Para qué sirve?** Analiza el código en busca de errores, código muerto o patrones desaconsejados (a diferencia de Prettier, que solo da formato, ESLint revisa la *calidad* del código).
+**¿Para qué sirve?** Analiza el código en busca de errores, código muerto o patrones desaconsejados (a diferencia de Prettier, que solo da formato, ESLint revisa la _calidad_ del código).
 
 ```bash
 ng add @angular-eslint/schematics
@@ -153,15 +158,18 @@ npx husky init
 ```
 
 Esto crea automáticamente:
+
 - La carpeta `.husky/` con un archivo `pre-commit`.
 - El script `"prepare": "husky"` en `package.json` (así, si otra persona clona el proyecto, los hooks se activan solos al hacer `npm install`).
 
 Se editó `.husky/pre-commit` para que ejecute:
+
 ```
 npx lint-staged
 ```
 
 Y se añadió esta configuración en `package.json`:
+
 ```json
 "lint-staged": {
   "*.ts": ["eslint --fix", "prettier --write"],
