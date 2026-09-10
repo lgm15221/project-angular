@@ -1,59 +1,206 @@
-# Project Angular
+# Project Angular — Diario de configuración
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.21.
+Este documento recoge, paso a paso, cómo se ha montado este proyecto Angular desde cero. Está pensado para poder repetir el proceso en otro proyecto o para recordar por qué se hizo cada cosa y no solo el comando.
 
-## Development server
+> Angular 21/22 · Node.js 24 · npm 12
 
-To start a local development server, run:
+---
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## 1. Crear el proyecto
 
 ```bash
-ng generate component component-name
+ng new nombre-proyecto --routing --style=scss
+cd nombre-proyecto
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+- `--routing` genera ya el archivo `app.routes.ts`.
+- `--style=scss` usa SCSS en vez de CSS plano.
+- Cuando el CLI pregunte por SSR (Server-Side Rendering), respondimos **No** para mantener el proyecto simple mientras se aprende.
+- `ng new` inicializa Git automáticamente (ya hay un primer commit hecho por el propio CLI).
+
+## 2. Estructura de carpetas
+
+Dentro de `src/app/` se creó esta estructura:
+
+```
+src/app/
+├── pages/               # Páginas principales (una por ruta, normalmente)
+├── components/           # Componentes reutilizables entre páginas
+├── models/               # Interfaces TypeScript (forma de los datos)
+├── services/             # Lógica de negocio, llamadas HTTP, estado compartido
+├── core/
+│   ├── guards/            # Protección de acceso a rutas
+│   └── interceptors/      # Modificación de peticiones/respuestas HTTP
+├── directives/            # Directivas personalizadas
+├── pipes/                 # Pipes personalizados
+├── app.routes.ts          # Definición de rutas
+└── app.config.ts          # Configuración global (providers)
+```
+
+Comando usado:
 
 ```bash
-ng generate --help
+mkdir -p src/app/pages src/app/components src/app/models src/app/services
+mkdir -p src/app/core/guards src/app/core/interceptors
+mkdir -p src/app/directives src/app/pipes
 ```
 
-## Building
+**¿Por qué esta estructura?** Separa "qué se ve" (pages, components) de "cómo funciona" (services, models) y de "reglas transversales" (core). Así, cuando el proyecto crezca, es fácil saber dónde buscar cada cosa.
 
-To build the project run:
+## 3. Verificar `app.config.ts` y `main.ts`
+
+El CLI ya los genera correctamente en esta versión de Angular, pero es importante entender qué hace cada uno:
+
+**`app.config.ts`** — configuración global de la app. Aquí se registran todos los "providers" (router, HttpClient, interceptores, etc.):
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(routes)],
+};
+```
+
+**`main.ts`** — el punto de arranque de la app. Solo importa `appConfig` y arranca:
+
+```ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { appConfig } from './app/app.config';
+
+bootstrapApplication(AppComponent, appConfig);
+```
+
+## 4. Primer componente y ruta
 
 ```bash
-ng build
+ng g c pages/home
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+`app.component.html` (punto donde Angular inserta la página activa):
 
-## Running unit tests
+```html
+<router-outlet />
+```
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+`app.routes.ts` (mapea la URL con el componente):
+
+```ts
+import { Routes } from '@angular/router';
+import { HomeComponent } from './pages/home/home.component';
+
+export const routes: Routes = [{ path: '', component: HomeComponent }];
+```
+
+**Comprobación:** `ng serve` → abrir `http://localhost:4200` → debe mostrarse el contenido de `HomeComponent`.
+
+## 5. Prettier — formateo automático del código
+
+**¿Para qué sirve?** Da formato uniforme al código automáticamente (comillas, punto y coma, indentación...) para que todo el equipo escriba con el mismo estilo, sin discutirlo.
 
 ```bash
-ng test
+npm install --save-dev prettier
 ```
 
-## Running end-to-end tests
+`.prettierrc` (reglas de formato):
 
-For end-to-end (e2e) testing, run:
+```json
+{
+  "singleQuote": true,
+  "semi": true,
+  "tabWidth": 2,
+  "printWidth": 100,
+  "trailingComma": "none"
+}
+```
+
+`.prettierignore` (carpetas que Prettier no debe tocar):
+
+```
+dist
+node_modules
+coverage
+```
+
+## 6. ESLint — detección de errores y malas prácticas
+
+**¿Para qué sirve?** Analiza el código en busca de errores, código muerto o patrones desaconsejados (a diferencia de Prettier, que solo da formato, ESLint revisa la _calidad_ del código).
 
 ```bash
-ng e2e
+ng add @angular-eslint/schematics
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+Este único comando ya deja todo configurado: crea `eslint.config.js` con las reglas recomendadas y añade el comando de lint al proyecto. No hace falta tocar nada más a mano.
 
-## Additional Resources
+> **Nota de versión:** en guías antiguas se menciona un archivo `.eslintrc.json`. Ese formato quedó obsoleto con ESLint 9 (el que usa esta versión de Angular); ahora se usa `eslint.config.js`, que se genera solo con el comando de arriba.
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## 7. Scripts añadidos a `package.json`
+
+```json
+"scripts": {
+  "lint": "ng lint",
+  "format": "prettier --write ."
+}
+```
+
+- `npm run lint` → revisa errores de código.
+- `npm run format` → formatea todo el proyecto con Prettier.
+
+## 8. Husky + lint-staged — bloquear commits con errores
+
+**¿Para qué sirve?** Husky ejecuta comandos automáticamente en momentos concretos de Git (por ejemplo, justo antes de un commit). Combinado con `lint-staged` (que aplica lint/formato solo a los archivos que se van a subir, no a todo el proyecto), evita que se suba código sin revisar.
+
+```bash
+npm install --save-dev husky lint-staged
+npx husky init
+```
+
+Esto crea automáticamente:
+
+- La carpeta `.husky/` con un archivo `pre-commit`.
+- El script `"prepare": "husky"` en `package.json` (así, si otra persona clona el proyecto, los hooks se activan solos al hacer `npm install`).
+
+Se editó `.husky/pre-commit` para que ejecute:
+
+```
+npx lint-staged
+```
+
+Y se añadió esta configuración en `package.json`:
+
+```json
+"lint-staged": {
+  "*.ts": ["eslint --fix", "prettier --write"],
+  "*.html": ["prettier --write"]
+}
+```
+
+### Flujo diario resultante
+
+1. Se escribe código normal.
+2. `git add .` y `git commit -m "mensaje"`.
+3. Husky dispara `pre-commit` → `lint-staged` revisa **solo** los archivos que se van a commitear.
+4. Si todo está bien, formatea automáticamente y el commit se completa.
+5. Si ESLint encuentra un error que no puede arreglar solo, el commit se bloquea hasta corregirlo.
+
+## 9. Comprobación de que todo funciona
+
+```bash
+npm run lint
+npm run format
+git add .
+git commit -m "chore: setup inicial con prettier, eslint y husky"
+```
+
+Si el commit se completa sin bloqueos, la configuración es correcta.
+
+---
+
+## Próximos pasos (pendiente de documentar)
+
+- [ ] Servicios + `HttpClient`
+- [ ] `json-server` como backend simulado
+- [ ] Guards e Interceptores
+- [ ] Formularios reactivos
