@@ -1,1 +1,10 @@
-<p>users works!</p>
+<button (click)="addUser()">Añadir usuario</button>
+
+@for (user of users(); track user.id) {
+  <p>
+    {{ user.name }} — {{ user.email }}
+    <button (click)="deleteUser(user.id)">Borrar</button>
+  </p>
+} @empty {
+  <p>No hay usuarios todavía.</p>
+}

@@ -13,6 +13,19 @@ export class Users {
   users = signal<User[]>([]);
 
   constructor() {
+    this.loadUsers();
+  }
+
+  loadUsers() {
     this.userService.getUsers().subscribe(data => this.users.set(data));
+  }
+
+  addUser() {
+    const nuevo = { name: 'Nuevo usuario', email: 'nuevo@mail.com' };
+    this.userService.addUser(nuevo).subscribe(() => this.loadUsers());
+  }
+
+  deleteUser(id: number) {
+    this.userService.deleteUser(id).subscribe(() => this.loadUsers());
   }
 }
