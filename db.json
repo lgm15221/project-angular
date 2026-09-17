@@ -1,0 +1,10 @@
+{
+  "users": [
+    { "id": 1, "name": "Juan", "email": "juan@mail.com" },
+    { "id": 2, "name": "Ana", "email": "ana@mail.com" }
+  ],
+  "products": [
+    { "id": 1, "name": "Camiseta", "price": 20 },
+    { "id": 2, "name": "Zapatos", "price": 50 }
+  ]
+}
